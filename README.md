@@ -1,4 +1,4 @@
-# Typing Battle
+# Typing Battle - Kelompok 4
 **Typing Battle - Cloud Computing - Semester 4**
 
 ## Nama Anggota
@@ -15,7 +15,7 @@
 
 ## Link
 - Video Demo (YT) : 
-- Proposal PDF : 
+- Proposal PDF : https://docs.google.com/document/d/1BDKVF_nz_mPT9r6ti4AJQwMvICEDvdT3/edit?usp=sharing&ouid=108205969791380194604&rtpof=true&sd=true
 - Laporan Akhir PDF : 
 - Slide Presentasi PDF :
 
