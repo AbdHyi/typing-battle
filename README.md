@@ -1,6 +1,5 @@
 # Typing Battle
-
-## Typing Battle - Cloud Computing - Semester 4
+**Typing Battle - Cloud Computing - Semester 4**
 
 ## Nama Anggota
 1. Abdul Hayyi (2410010612)
