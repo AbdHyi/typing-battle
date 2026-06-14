@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Battle - Ranking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .top-rank-card {
+            transition: transform 0.3s ease;
+        }
+        .top-rank-card:hover {
+            transform: translateY(-10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="container mx-auto px-6 py-8 flex justify-between items-center relative z-10">
+        <a href="index.html" class="text-2xl font-bold gradient-text">TypingBattle</a>
+        <a href="index.html" class="text-slate-400 hover:text-white transition flex items-center bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700">
+            <i class="fas fa-arrow-left mr-2"></i> Kembali ke Menu
+        </a>
+    </nav>
+
+    <div class="container mx-auto px-6 py-12">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold mb-4">Global <span class="gradient-text">Leaderboard</span></h1>
+                <p class="text-slate-400 max-w-lg mx-auto leading-relaxed">Pemain dengan kecepatan ketik (WPM) tertinggi sepanjang masa. Jadilah yang tercepat di TypingBattle!</p>
+            </div>
+
+            <!-- Top 3 Showcase -->
+            <div id="top-3-container" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 items-end">
+                <!-- Data will be injected here -->
+                <div class="col-span-3 text-center py-12 text-slate-500">
+                    <i class="fas fa-spinner fa-spin mr-2 text-2xl"></i> Memuat pemain terbaik...
+                </div>
+            </div>
+
+            <!-- Full Ranking Table -->
+            <div class="card rounded-[40px] overflow-hidden shadow-2xl">
+                <div class="p-8 border-b border-slate-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-list-ol mr-3 text-blue-400"></i> Ranking Lengkap
+                    </h2>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-800 px-3 py-1 rounded-full">Top 10 Players</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-800/30">
+                                <th class="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Rank</th>
+                                <th class="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Username</th>
+                                <th class="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Top WPM</th>
+                                <th class="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Accuracy</th>
+                                <th class="px-8 py-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Total Games</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body">
+                            <!-- Loading State -->
+                            <tr>
+                                <td colspan="5" class="px-8 py-20 text-center text-slate-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-database mb-4 text-3xl opacity-20"></i>
+                                        <span>Menghubungkan ke server...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchRanking() {
+            try {
+                const response = await fetch('/api/ranking');
+                const data = await response.json();
+                
+                const top3Container = document.getElementById('top-3-container');
+                const rankingBody = document.getElementById('ranking-body');
+                
+                if (data.length === 0) {
+                    top3Container.innerHTML = '';
+                    rankingBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-8 py-20 text-center text-slate-500 italic">
+                                Belum ada data statistik. Ayo jadilah yang pertama masuk ranking!
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Render Top 3
+                top3Container.innerHTML = '';
+                const top3 = data.slice(0, 3);
+                
+                // Reorder Top 3 for visual hierarchy: 2nd, 1st, 3rd
+                const visualOrder = [];
+                if (top3[1]) visualOrder.push({ ...top3[1], rank: 2 });
+                if (top3[0]) visualOrder.push({ ...top3[0], rank: 1 });
+                if (top3[2]) visualOrder.push({ ...top3[2], rank: 3 });
+
+                visualOrder.forEach(player => {
+                    const isFirst = player.rank === 1;
+                    const card = document.createElement('div');
+                    card.className = `top-rank-card card rounded-[40px] p-8 text-center relative ${isFirst ? 'md:order-2 border-blue-500/30 bg-blue-500/5' : player.rank === 2 ? 'md:order-1' : 'md:order-3'}`;
+                    
+                    const iconColor = player.rank === 1 ? 'text-yellow-400' : player.rank === 2 ? 'text-slate-300' : 'text-orange-400';
+                    const icon = player.rank === 1 ? 'fa-crown' : 'fa-medal';
+
+                    card.innerHTML = `
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center border-2 border-slate-800">
+                            <i class="fas ${icon} ${iconColor} text-xl"></i>
+                        </div>
+                        <div class="mb-4 mt-2">
+                            <div class="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center text-3xl font-black text-slate-600 mb-4 border-4 border-slate-700">
+                                ${player.username.charAt(0).toUpperCase()}
+                            </div>
+                            <h3 class="text-xl font-bold truncate">${player.username}</h3>
+                            <p class="text-sm text-slate-500 uppercase tracking-widest font-bold">Rank ${player.rank}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="text-4xl font-black ${isFirst ? 'gradient-text' : 'text-white'}">${Math.round(player.top_wpm)}</div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">WPM</div>
+                        </div>
+                    `;
+                    top3Container.appendChild(card);
+                });
+
+                // Render Table
+                rankingBody.innerHTML = '';
+                data.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-slate-800 hover:bg-slate-800/30 transition group';
+                    
+                    let rankBadge = index + 1;
+                    if (index === 0) rankBadge = '<span class="w-8 h-8 rounded-full bg-yellow-400/10 text-yellow-400 flex items-center justify-center font-black">1</span>';
+                    else if (index === 1) rankBadge = '<span class="w-8 h-8 rounded-full bg-slate-400/10 text-slate-300 flex items-center justify-center font-black">2</span>';
+                    else if (index === 2) rankBadge = '<span class="w-8 h-8 rounded-full bg-orange-400/10 text-orange-400 flex items-center justify-center font-black">3</span>';
+                    else rankBadge = `<span class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center font-bold">${index + 1}</span>`;
+
+                    tr.innerHTML = `
+                        <td class="px-8 py-6">${rankBadge}</td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center mr-4 text-slate-500 font-bold border border-slate-700">
+                                    ${row.username.charAt(0).toUpperCase()}
+                                </div>
+                                <span class="font-bold text-lg group-hover:text-blue-400 transition">${row.username}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="text-2xl font-black text-blue-400">${Math.round(row.top_wpm)}</span>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="text-lg font-bold text-purple-400">${Math.round(row.avg_accuracy)}%</span>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="text-slate-500 font-mono">${row.total_games}</span>
+                        </td>
+                    `;
+                    rankingBody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('ranking-body').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center text-red-400">
+                            <i class="fas fa-exclamation-triangle mb-4 text-3xl"></i>
+                            <p>Gagal memuat data ranking. Pastikan database MySQL aktif.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        fetchRanking();
+    </script>
+</body>
+</html>

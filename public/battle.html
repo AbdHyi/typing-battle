@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Battle - Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .typing-area {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            line-height: 2rem;
+            letter-spacing: 0.05em;
+        }
+        .correct { color: #22c55e; }
+        .incorrect { color: #ef4444; background: rgba(239, 68, 68, 0.2); border-radius: 2px; }
+        .current { border-bottom: 2px solid #38bdf8; }
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="setup-screen" class="container mx-auto px-6 h-screen flex items-center justify-center">
+        <div class="card p-10 rounded-3xl w-full max-w-md">
+            <h1 class="text-3xl font-bold mb-8 text-center">Join Battle</h1>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-400 mb-2">Username</label>
+                    <input type="text" id="username-input" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" placeholder="Masukkan namamu">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-400 mb-2">Room Code</label>
+                    <input type="text" id="room-input" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" placeholder="Contoh: BATTLE123">
+                </div>
+                <button id="join-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-blue-600/20">
+                    Gabung Sekarang
+                </button>
+                <button onclick="window.location.href='index.html'" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-semibold transition border border-slate-700 flex items-center justify-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Kembali ke Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden container mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar: Players -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="card p-6 rounded-2xl">
+                    <h2 class="font-bold mb-4 flex items-center">
+                        <i class="fas fa-users mr-2 text-blue-400"></i> Pemain
+                    </h2>
+                    <div id="players-list" class="space-y-4">
+                        <!-- Players will be injected here -->
+                    </div>
+                </div>
+                <div id="lobby-controls" class="card p-6 rounded-2xl hidden">
+                    <button id="ready-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition flex items-center justify-center">
+                        <i class="fas fa-check-circle mr-2"></i> <span id="ready-btn-text">Siap Bertanding</span>
+                    </button>
+                    <p class="text-[10px] text-slate-500 text-center mt-3">Game dimulai saat semua pemain (min. 2) sudah Siap.</p>
+                    <button onclick="window.location.href='index.html'" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center border border-slate-700">
+                        <i class="fas fa-arrow-left mr-2"></i> Kembali ke Menu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main: Typing Area -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Stats Bar -->
+                <div class="card p-6 rounded-2xl flex justify-around items-center">
+                    <div class="text-center">
+                        <div class="text-slate-400 text-xs uppercase tracking-widest font-bold">WPM</div>
+                        <div id="wpm-display" class="text-3xl font-extrabold text-blue-400">0</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-slate-400 text-xs uppercase tracking-widest font-bold">Akurasi</div>
+                        <div id="accuracy-display" class="text-3xl font-extrabold text-purple-400">100%</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-slate-400 text-xs uppercase tracking-widest font-bold">Waktu</div>
+                        <div id="timer-display" class="text-3xl font-extrabold text-slate-300">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Sentence Display -->
+                <div class="card p-10 rounded-3xl min-h-[200px] flex items-center justify-center relative overflow-hidden">
+                    <div id="sentence-display" class="typing-area text-slate-400 select-none">
+                        Waiting for players...
+                    </div>
+                    <div id="countdown-overlay" class="absolute inset-0 bg-slate-900/90 flex items-center justify-center hidden">
+                        <div id="countdown-number" class="text-8xl font-black text-blue-500 animate-bounce">3</div>
+                    </div>
+                </div>
+
+                <!-- Hidden Input -->
+                <input type="text" id="game-input" class="opacity-0 absolute pointer-events-none" autocomplete="off">
+                <div class="text-center text-slate-500 animate-pulse">
+                    <i class="fas fa-keyboard mr-2"></i> Klik di sini dan mulai mengetik
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Results Comparison -->
+        <div id="match-results-section" class="mt-12 hidden">
+            <div class="card rounded-[40px] p-10 border-blue-500/30 bg-blue-500/5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fas fa-flag-checkered text-8xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-8 flex items-center">
+                    <i class="fas fa-trophy mr-3 text-yellow-500"></i> Hasil Pertandingan
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="match-comparison-cards">
+                    <!-- Player comparison cards will be injected here -->
+                </div>
+                
+                <!-- Match Actions (Moved from modal) -->
+                <div id="match-actions" class="mt-12 flex flex-col md:flex-row justify-center gap-4 hidden">
+                    <button id="rematch-btn-bottom" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black text-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+                        Rematch!
+                    </button>
+                    <button onclick="window.location.href='index.html'" class="bg-slate-800 text-slate-300 px-12 py-4 rounded-2xl font-bold text-lg hover:bg-slate-700 transition border border-slate-700">
+                        Keluar ke Beranda
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrated Global Ranking Table -->
+        <div id="battle-ranking-section" class="mt-12 hidden">
+            <div class="card rounded-[32px] overflow-hidden">
+                <div class="p-6 border-b border-slate-700">
+                    <h2 class="text-xl font-bold flex items-center text-slate-300">
+                        <i class="fas fa-trophy mr-3 text-yellow-500"></i> Global Leaderboard
+                    </h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-800/50 border-b border-slate-700">
+                                <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Username</th>
+                                <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top WPM</th>
+                                <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Accuracy</th>
+                                <th class="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Total Games</th>
+                            </tr>
+                        </thead>
+                        <tbody id="battle-ranking-body">
+                            <!-- Data will be injected here via script.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="mt-4 text-[10px] text-slate-500 italic text-center">
+                Peringkat dihitung berdasarkan Net WPM (80%) dan Akurasi (20%).<br>
+                Net WPM = Gross WPM - Kesalahan Kata.
+            </p>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="card p-12 rounded-[40px] max-w-lg w-full text-center">
+            <div class="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-trophy text-emerald-400 text-4xl"></i>
+            </div>
+            <h2 class="text-4xl font-black mb-2">Battle Selesai!</h2>
+            <p id="result-username" class="text-slate-400 mb-8">Hasil kerja bagus, Bro!</p>
+            
+            <div class="grid grid-cols-2 gap-6 mb-10">
+                <div class="bg-slate-800/50 p-6 rounded-2xl">
+                    <div class="text-sm text-slate-500 mb-1">Final WPM</div>
+                    <div id="final-wpm" class="text-4xl font-bold text-blue-400">0</div>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl">
+                    <div class="text-sm text-slate-500 mb-1">Akurasi</div>
+                    <div id="final-accuracy" class="text-4xl font-bold text-purple-400">0%</div>
+                </div>
+            </div>
+
+            <div id="waiting-opponent" class="mb-8 text-slate-400 animate-pulse hidden">
+                <i class="fas fa-hourglass-half mr-2"></i> Menunggu lawan menyelesaikan permainan...
+            </div>
+
+            <div id="result-actions" class="space-y-4 hidden">
+                <p class="text-xs font-bold text-blue-500 uppercase tracking-widest animate-bounce">
+                    <i class="fas fa-arrow-down mr-1"></i> Cek Peringkat di Bawah!
+                </p>
+                <button id="rematch-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xl hover:bg-blue-700 transition">
+                    Rematch!
+                </button>
+                <button onclick="window.location.href='index.html'" class="w-full bg-slate-800 text-slate-300 py-4 rounded-2xl font-bold text-lg hover:bg-slate-700 transition">
+                    Keluar ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+CARA MENJALANKAN WEBSITE TYPING BATTLE
+
+Aplikasi ini menggunakan Node.js untuk backend dan MySQL untuk database. Ikuti langkah-langkah berikut untuk menjalankan website di komputer lokal:
+
+1. Prasyarat:
+   - Pastikan Node.js sudah terinstal.
+   - Pastikan MySQL Server sudah terinstal dan sedang berjalan.
+
+2. Persiapan Database:
+   - Buka MySQL (melalui Terminal atau GUI seperti MySQL Workbench/phpMyAdmin).
+   - Buat database baru bernama 'typing_battle':
+     CREATE DATABASE typing_battle;
+   - Masuk ke database tersebut:
+     USE typing_battle;
+   - Buat tabel-tabel yang diperlukan:
+     
+     CREATE TABLE users (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         username VARCHAR(255) UNIQUE NOT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     );
+
+     CREATE TABLE games (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         sentence TEXT NOT NULL,
+         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     );
+
+     CREATE TABLE user_stats (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         user_id INT,
+         game_id INT,
+         wpm FLOAT,
+         error_rate FLOAT,
+         accuracy FLOAT,
+         completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (user_id) REFERENCES users(id),
+         FOREIGN KEY (game_id) REFERENCES games(id)
+     );
+
+   - Catatan: Kredensial database di server.js adalah (User: root, Password: oke). Jika berbeda, silakan sesuaikan di file server.js.
+
+3. Instalasi Dependencies:
+   - Buka terminal di folder proyek (typing-battle).
+   - Jalankan perintah berikut untuk menginstal library yang diperlukan:
+     npm install
+
+4. Menjalankan Server:
+   - Di terminal yang sama, jalankan perintah:
+     node server.js
+   - Jika berhasil, akan muncul pesan: "Server is running on http://localhost:3000" dan "Connected to MySQL Database: typing_battle".
+
+5. Akses Website:
+   - Buka browser dan ketik alamat:
+     http://localhost:3000/index.html
+
+Selamat bermain!
