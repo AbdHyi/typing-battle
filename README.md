@@ -20,7 +20,14 @@
 - Slide Presentasi PDF :
 
 ## Teknologi yang Digunakan
-- 
+**Frontend**
+- HTML5
+- CSS3 (Tailwind CSS)
 - JavaScript
+
+**Backend**
+- Node.js dengan framework Express.js
 - MySQL
-- WebSocket
+- WebSocket (Socket.io)
+
+## Analisis Statistik
