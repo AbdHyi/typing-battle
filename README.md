@@ -3,9 +3,9 @@
 
 ## Nama Anggota
 1. Abdul Hayyi (2410010612)
-2. Nadiya Syafa (2410010577)
-3. Fija Mushofaini (2410010375)
-4. Muhammad Daffaa Ramadhan (2410010498)
+2. Fija Mushofaini (2410010375)
+3. Muhammad Daffaa Ramadhan (2410010498)
+4. Nadiya Syafa (2410010577)
 
 **Peran** (Backend / Frontend / Database / Statistik)
 - Backend : Abdul Hayyi
@@ -15,7 +15,7 @@
 
 ## Link
 - Video Demo (YT) : 
-- Proposal PDF : https://docs.google.com/document/d/1BDKVF_nz_mPT9r6ti4AJQwMvICEDvdT3/edit?usp=sharing&ouid=108205969791380194604&rtpof=true&sd=true
+- Proposal PDF (File) : https://docs.google.com/document/d/1BDKVF_nz_mPT9r6ti4AJQwMvICEDvdT3/edit?usp=sharing&ouid=108205969791380194604&rtpof=true&sd=true
 - Laporan Akhir PDF : 
 - Slide Presentasi PDF :
 
@@ -31,3 +31,5 @@
 - WebSocket (Socket.io)
 
 ## Analisis Statistik
+
+TBC
